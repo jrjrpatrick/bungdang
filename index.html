@@ -293,6 +293,12 @@ tr.bad td{background:rgba(179,36,28,.16)}
  #banner{top:calc(env(safe-area-inset-top,0px) + 250px)}
  #king img,#king .kFallback{height:34vh}
 }
+
+.spdWrap{display:inline-flex;gap:6px}
+.spdLock{cursor:default;opacity:.85}
+.spdLock:hover{border-color:var(--line)}
+#king img.kOld{position:absolute;left:50%;bottom:0;transform:translateX(-50%);transition:opacity .45s}
+#king{min-width:10px}
 </style></head><body>
 <div id="bgHall"></div>
 <div id="king" class="hidden" aria-hidden="true"></div>
@@ -305,9 +311,9 @@ tr.bad td{background:rgba(179,36,28,.16)}
   <div class="comboHud" id="comboHud"></div>
   <div class="ctrl">
     <span class="who-me" id="whoMe"></span>
-    <button class="chip spd on" data-s="1">1배</button>
+    <span class="spdWrap" id="hudSpd"><button class="chip spd on" data-s="1">1배</button>
     <button class="chip spd" data-s="2">2배</button>
-    <button class="chip spd" data-s="4">4배</button>
+    <button class="chip spd" data-s="4">4배</button></span><span class="chip spdLock hidden" id="spdLock" title="속도는 선생님이 정해요">속도 1배</span>
     <button class="chip" id="pauseBtn">일시정지</button>
     <button class="chip" id="miniBtn">계보도</button>
     <button class="chip" id="muteBtn">소리 켬</button>
@@ -361,7 +367,7 @@ tr.bad td{background:rgba(179,36,28,.16)}
   <div class="evBoth hidden" id="evBoth"><button id="bothBtn"></button><small>가운데 버튼 또는 ↑ 키</small></div>
 </div>
 
-<div id="result" class="hidden"><div class="rCard navyCard" id="rCard"><div class="rStamp" id="rStamp"></div><div class="rTags" id="rTags"></div><h3 id="rTitle"></h3><p id="rMine"></p><p class="real" id="rReal"></p><p class="fix hidden" id="rFix"></p><div class="row" style="justify-content:flex-end;margin:12px 0 0"><button class="btn" id="rNext">다음 시대로 ▶</button></div></div></div>
+<div id="result" class="hidden"><div class="rCard navyCard" id="rCard"><div class="rStamp" id="rStamp"></div><div class="rTags" id="rTags"></div><h3 id="rTitle"></h3><p id="rMine"></p><p class="real" id="rReal"></p><p class="fix hidden" id="rFix"></p><div class="row" style="justify-content:flex-end;margin:12px 0 0"><button class="btn" id="rNext">다음 단계로 (Enter)</button></div></div></div>
 
 <!-- 첫 화면 -->
 <div id="title" class="screen">
@@ -379,13 +385,13 @@ tr.bad td{background:rgba(179,36,28,.16)}
     </div>
     <p class="formMsg" id="formMsg"></p>
     <div class="row"><button class="big primary" id="startBtn">즉위하기</button><button class="big" id="practiceBtn">연습하기 (저장 안 됨)</button></div>
-    <div class="row"><label>흐르는 속도</label><button class="chip spd on" data-s="1">1배</button><button class="chip spd" data-s="2">2배</button><button class="chip spd" data-s="4">4배</button></div>
+    <div class="row" id="practiceSpd"><label>연습하기 속도</label><button class="chip spd on" data-s="1">1배</button><button class="chip spd" data-s="2">2배</button><button class="chip spd" data-s="4">4배</button></div>
     <details class="more"><summary>게임 방법 보기</summary>
       <p class="lead">1567년 선조부터 1720년 숙종까지, 1년이 1초씩 흐릅니다. 붕당이 생겨나고 갈라지다가 큰 사건이 터지면 시간이 멈추고 신하들이 상소를 올립니다.</p>
       <div class="how">
         <div><b>상소 판결하기</b><span>왼쪽·오른쪽 상소 중 실제 역사에서 받아들여진 쪽을 누르세요(← → 키도 됩니다). 가운데 버튼이 있으면 그것도 고를 수 있어요.</span></div>
         <div><b>저울 지켜보기</b><span>판결할 때마다 왕권과 신권의 저울이 움직입니다. 잘못 고르면 점선 저울이 잠깐 보였다가 실제 역사로 되돌아가요.</span></div>
-        <div><b>틀리면 목숨 −1</b><span>목숨은 사건 수만큼 9개. 끝나면 실제 역사와 내 판결, 저울의 변화를 비교합니다.</span></div>
+        <div><b>틀리면 목숨 −1</b><span>목숨은 사건 수만큼 9개. 끝나면 실제 역사와 내 선택, 저울의 변화를 비교합니다.</span></div>
       </div>
       <div class="legend"><span><i style="background:#3f86e0"></i>동인은 동쪽 파랑</span><span><i style="background:#ece6d6"></i>서인은 서쪽 흰색</span><span><i style="background:#e0503f"></i>남인은 남쪽 빨강</span><span><i style="background:#3d4157"></i>북인은 북쪽 검정</span></div>
     </details>
@@ -1666,7 +1672,7 @@ function drawQR(el, text, px){ el.innerHTML = ""; try{ var q = new QRLIB.QRCode(
    저울 값 v : -1 = 왕권 쪽으로 기움 · 0 = 조화 · +1 = 신권 쪽으로 기움
    사실 확인: 교과서 주제34, 한국민족문화대백과(경신환국·기사환국), 한국학중앙연구원 디지털인문학 위키(갑술환국) */
 const START = 1567, END = 1720;
-const VERSION = '판 2026-10-20 ②';
+const VERSION = '판 2026-10-21 ④';
 
 const FACTIONS = {
   sarim : {name:'사림',  short:'사림', color:'#4fae74', side:'R', parent:null,    tree:[150,26]},
@@ -1685,6 +1691,7 @@ const KINGS = [
   {n:'효종',  no:17, y:1649,   img:'king_hyojong'},
   {n:'현종',  no:18, y:1659.4, img:'king_hyeonjong'},
   {n:'숙종',  no:19, y:1674.6, img:'king_sukjong'},
+  {n:'숙종',  no:19, y:1716.0, img:'king_sukjong_late', alt:'king_sukjong', same:true},   // 숙종 말기: 지친 숙종(그림 없으면 원래 숙종)
 ];
 
 /* 단계 = 학습지 구조도 왼쪽 라벨 */
@@ -1710,6 +1717,11 @@ const STORY = {
      c:'서로 다른 정치적·학문적 입장을 가진 사림들이 모여 이룬 집단을 **붕당**이라고 한다. 붕당들은 상대 붕당을 **비판하고 토론**하면서 더 합리적인 정책을 만들려고 노력했다. 이것이 **붕당 정치**이다.',
      tip:'비판과 견제가 살아 있어서 어느 한 붕당이 지나치게 강해지기 어려웠습니다. 저울도 가운데에 있지요.'},
   ],
+  succession: [
+    {k:'1716년 무렵, 숙종 말기', t:'노론과 소론, 서로 다른 왕자를 지지하다', img:'st_succession',
+     c:'숙종 말기, **소론**은 세자(훗날 경종)를, **노론**은 연잉군(훗날 영조)을 지지하며 맞섰다. 환국으로 깊어진 붕당의 다툼이 이제 **다음 왕을 누구로 할지**까지 번진 것이다.',
+     tip:'저울을 보세요. 이번에는 붕당(신권) 쪽으로 기울기 시작합니다. 깊어진 붕당의 대립이 오히려 왕권을 흔들게 되었어요.'},
+  ],
   hwanguk: [
     {k:'정리', t:'환국의 공통점', img:'st_hwanguk',
      c:'① 왕이 **하루아침에** 권력을 잡은 붕당을 바꾸었다.<br>② 진 쪽은 **역적**으로 몰려 죽거나 쫓겨났다.<br>③ 붕당 사이의 **공존과 세력 균형**이 무너지고, 한 붕당이 권력을 **독점**했다.',
@@ -1732,12 +1744,12 @@ const EVENTS = [
   R:{f:['dongin'],who:'동인 이산해', say:'정철이 **전하의 뜻을 거스르고** 제멋대로 일을 꾸몄사옵니다!'},
   ans:'R', stamp:'파직·유배', sc:0, gh:{L:0},
   real:'선조가 크게 노해 정철은 벼슬에서 쫓겨나 귀양을 갔다. 이때 **서인을 얼마나 벌할지**를 두고 동인이 강경파 **북인**과 온건파 **남인**으로 갈라진다.'},
- {id:'injo', y:1623.2, title:'인조반정', era:'광해군 15년', stage:'전개',
-  ctx:'광해군 때에는 왜란 때 의병장으로 활약한 북인이 권력을 독점했다. 광해군은 동생 영창대군을 죽게 하고 인목대비를 가두었다. 서인이 왕을 바꾸려고 군사를 일으켰다. 지금 당신은 광해군입니다!',
-  L:{f:['seoin'], who:'서인 김류·이귀', say:'**어머니를 가두고 동생을 죽게 한** 왕은 도리를 잃었사옵니다! **새 임금**을 모시겠사옵니다!'},
-  R:{f:['bugin'], who:'북인 이이첨',   say:'전하께서는 **전쟁 뒤의 나라를 다시 세우셨사옵니다!** 저 **반역의 무리**를 막으소서!'},
+ {id:'injo', y:1623.2, title:'인조반정', era:'광해군 15년', stage:'전개', fig:'daebi_inmok', figName:'인목대비',
+  ctx:'광해군 때에는 왜란 때 의병장으로 활약한 북인이 권력을 독점했다. 광해군은 동생 영창대군을 죽게 하고 인목대비를 서궁에 가두었다. 1623년, 서인이 군사를 일으켜 궁궐을 차지한 뒤 서궁에 갇힌 인목대비를 찾아왔다. 지금 당신은 인목대비입니다!',
+  L:{f:['seoin'], who:'서인 이귀', say:'대비마마, 저희는 **역적이 아니옵니다!** 어머니를 가두고 동생을 죽게 한 광해군을 몰아내고, **능양군을 새 임금으로** 세우려 하옵니다. 허락해 주소서!'},
+  R:{f:['bugin'], who:'북인',     say:'대비마마, 저들은 **임금을 몰아내려는 반역의 무리**이옵니다! 광해군 전하는 **전쟁 뒤의 나라를 다시 세우셨사옵니다!**'},
   ans:'L', stamp:'처형·유배', sc:0.6, gh:{R:0},
-  real:'광해군은 왕의 자리에서 쫓겨나 귀양을 갔고, 북인은 크게 처벌받아 힘을 잃었다(주제 6 참고). **신하들이 힘을 모아 왕을 바꾼** 사건이라 저울이 신권 쪽으로 크게 기울었다.'},
+  real:'인목대비는 반정을 받아들여 **옥새를 능양군(인조)에게 넘기고**, 광해군을 왕의 자리에서 물러나게 하는 교서를 내렸다. 광해군은 귀양을 갔고, 북인은 크게 처벌받아 힘을 잃었다(주제 6 참고). **신하들이 힘을 모아 왕을 바꾼** 사건이라 저울이 신권 쪽으로 크게 기울었다.'},
  {id:'gongjon', y:1623.9, title:'반정 이후의 조정', era:'인조 1년', stage:'전개', both:true,
   ctx:'반정에 성공한 서인이 조정을 이끌게 되었다. 새 임금 인조는 누구에게 나랏일을 맡겨야 할까?',
   L:{f:['seoin'], who:'서인 반정 공신', say:'반정을 이룬 **서인만으로도 충분**하옵니다! 다른 붕당은 쓰지 마소서!'},
@@ -1779,7 +1791,7 @@ const EVENTS = [
   ctx:'숙종은 태어난 지 두 달 남짓 된 왕자를 원자(다음 왕이 될 맏아들)로 정하려 했다. 서인이 반대하고 나섰다.',
   L:{f:['noron','soron'], who:'서인 송시열', say:'중전께서 **아직 젊으시니**, 원자를 정하기엔 **너무 이르옵니다!**'},
   R:{f:['namin'],         who:'남인',        say:'왕자님을 **원자로 세우셔야** 나라가 **안정되옵니다!**'},
-  ans:'R', stamp:'사사·폐위', sc:-0.7, gh:{L:-0.45},
+  ans:'R', stamp:'사사·축출', sc:-0.7, gh:{L:-0.45},
   real:'숙종은 크게 노해 서인을 쫓아내고 남인을 다시 썼다. 송시열은 사약을 받았고, **인현왕후는 왕비 자리에서 쫓겨났으며** 장씨가 왕비가 되었다. 붕당 싸움이 왕비 자리까지 흔들었다.'},
  {id:'gapsul', y:1694.3, title:'갑술환국', era:'숙종 20년', stage:'변질',
   pre:[
@@ -1839,7 +1851,7 @@ const STRUCT = [
  {y:1608.2,  k:'banner',t1:'북인, 권력을 독점하다', t2:'광해군 때 왜란 때 의병장으로 활약한 북인이 조정을 차지했습니다', d:{bugin:22,namin:-10,seoin:-10}},
  {y:1623.3,  k:'fade',  ids:['bugin'], label:'북인, 힘을 잃다'},
  {y:1683.0,  k:'split', id:'seoin',  into:['noron','soron'],  label:'남인 처벌 문제로 서인이 노론(엄하게)과 소론(너그럽게)으로!'},
- {y:1716.0,  k:'banner',t1:'노론과 소론, 서로 다른 왕자를 지지하다', t2:'숙종 말기, 왕위를 이을 사람을 두고 두 붕당이 맞섰습니다', sc:0.3},
+ {y:1716.0,  k:'story', s:'succession', sc:0.3},
 ];
 const ENDING = {t1:'숙종 승하 (1720년)', t2:'노론과 소론의 대립 속에, 뒤를 이은 경종과 영조는 붕당의 눈치를 봐야 했습니다', sc:0.8};
 'use strict';
@@ -1861,11 +1873,24 @@ const nowStr = t => { const d = new Date(t); const p = n => String(n).padStart(2
 /* 선생님이 만든 그림 불러오기: img/이름.jpg → .png → .webp 순서로 찾고, 없으면 숨김 */
 const IMG_DIR = 'img/';
 const IMG_EXTS = ['jpg','png','webp','jpeg','JPG','PNG','WEBP','JPEG'];
+const IMG_PROM = {}; let IMG_PREF = null;   // 그림 주소를 한 번 찾으면 기억(처음 찾은 폴더를 다음부터 먼저 봄)
+function findImg(name){
+  if(!name) return Promise.resolve(null);
+  if(IMG_PROM[name]) return IMG_PROM[name];
+  const dirs = IMG_PREF === '' ? ['', 'img/'] : ['img/', ''];
+  const tries = []; dirs.forEach(d => IMG_EXTS.forEach(e => tries.push(d + name + '.' + e)));
+  IMG_PROM[name] = new Promise(res => { let i = 0; const im = new Image();
+    im.onload = () => { const u = tries[i]; if(IMG_PREF == null) IMG_PREF = u.startsWith('img/') ? 'img/' : ''; res(u); };
+    im.onerror = () => { i++; if(i < tries.length) im.src = tries[i]; else res(null); };
+    im.src = tries[0]; });
+  return IMG_PROM[name];
+}
 function loadImg(img, name, onFail){
-  const exts = IMG_EXTS; let i = 0;
-  img.onerror = () => { i++; if(i < exts.length) img.src = IMG_DIR + name + '.' + exts[i]; else { img.onerror = null; img.classList.add('hidden'); if(onFail) onFail(); } };
-  img.onload = () => img.classList.remove('hidden');
-  img.src = IMG_DIR + name + '.' + exts[0];
+  img.classList.add('hidden');
+  findImg(name).then(u => {
+    if(!u){ if(onFail) onFail(); return; }
+    img.onload = () => { img.classList.remove('hidden'); if(img.id === 'titleImg'){ const fb = document.querySelector('.tArtFb'); if(fb) fb.remove(); } };
+    img.src = u; });
 }
 
 /* ============ 소리 ============ */
@@ -1942,14 +1967,18 @@ function kingFallbackSVG(){
    + '<path d="M58 70 Q60 30 100 28 Q140 30 142 70 Z" fill="#1b1b22"/><circle cx="68" cy="40" r="14" fill="#1b1b22"/><circle cx="132" cy="40" r="14" fill="#1b1b22"/>'
    + '<path d="M84 96 h8 M108 96 h8" stroke="#3a2a1a" stroke-width="4" stroke-linecap="round"/><path d="M90 122 Q100 128 110 122" stroke="#7a3a2a" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
 }
-function setKing(i){
-  const K = KINGS[i]; const k = $('#king'); k.innerHTML = '';
-  const img = document.createElement('img'); img.alt = K.n; img.classList.add('hidden');
-  const fb = document.createElement('div'); fb.className = 'kFallback'; fb.innerHTML = kingFallbackSVG();
-  k.appendChild(img); k.appendChild(fb);
-  img.addEventListener('load', () => fb.remove(), {once:true});
-  loadImg(img, K.img, () => {});
+let figTok = 0;
+function showFigure(name, alt, label){   // 가운데 인물 그림: 새 그림이 다 준비된 뒤에 바꾼다(그동안 이전 그림 유지)
+  const tok = ++figTok, k = $('#king');
+  findImg(name).then(u => u || findImg(alt)).then(u => {
+    if(tok !== figTok) return;
+    if(!u){ k.innerHTML = '<div class="kFallback">' + kingFallbackSVG() + '</div>'; return; }   // 그림 파일이 정말 없을 때만 간단한 그림
+    const img = new Image(); img.alt = label || '';
+    img.onload = () => { if(tok !== figTok) return; k.innerHTML = ''; k.appendChild(img); };
+    img.src = u; });
 }
+function setKing(i){ const K = KINGS[i]; showFigure(K.img, K.alt, K.n); }
+function preloadFigures(){ KINGS.forEach(K => { findImg(K.img); if(K.alt) findImg(K.alt); }); EVENTS.forEach(e => { if(e.fig) findImg(e.fig); }); }
 
 /* ============ 진행 ============ */
 function processTL(){
@@ -1957,7 +1986,7 @@ function processTL(){
     const it = TL[S.tIdx++];
     if((it.k === 'event' || it.k === 'story') && bannerOn){ S.tIdx--; S.year = it.y - 0.0001; return; }
     if(it.k === 'event'){ S.year = it.y; const ev = EVENTS[it.i]; if(ev.pre) showStory(ev.pre, () => startEvent(it.i), ev.title); else startEvent(it.i); return; }
-    if(it.k === 'story'){ showStory(STORY[it.s], null); return; }
+    if(it.k === 'story'){ if(it.sc != null) setScale(it.sc); showStory(STORY[it.s], null); return; }
     if(it.k === 'end'){ S.year = END; endGame(); return; }
     if(it.k === 'amb'){ if(typeof it.a.d === 'number' && it.a.f) addPow(it.a.f, it.a.d); queueCard(it.a); }
     else if(it.k === 'hist'){ if(it.h.t === 'war') Object.values(S.fac).forEach(f => addPow(f.id, -5)); queueHist(it.h); }
@@ -2075,6 +2104,7 @@ function typeText(el, text){
 }
 function startEvent(i){
   const ev = EVENTS[i]; S.mode = 'event'; S.ev = ev; S.evIdx = i; S.armedAt = performance.now() + 900;
+  if(ev.fig) showFigure(ev.fig, KINGS[Math.max(0, S.kingIdx)].img, ev.figName);
   hideCards(); hideHist(); S.cardQ = [];
   S.evSides = {L:sideFacs(ev.L.f), R:sideFacs(ev.R.f)};
   document.body.classList.add('evOn');
@@ -2102,7 +2132,7 @@ function applyOutcome(ev, side, isReal){
   if(side === 'B'){ [...Ls, ...Rs].forEach(f => { f.power = f.power*.5 + 24; f.stamp = {text:'함께 등용', color:'#b8872e', t:0}; burst(f.x, f.y, '#f1d48d', 22, false); }); return; }
   const win = side === 'L' ? Ls : Rs, lose = side === 'L' ? Rs : Ls;
   win.forEach(f => { addPow(f.id, 18); f.stamp = {text:'등용', color:'#2f7d4f', t:0}; burst(f.x, f.y, FACTIONS[f.id].color, 24, false); });
-  lose.forEach(f => { f.power = Math.max(5, f.power*.45); f.flash = 1; f.stamp = {text: isReal ? ev.stamp : ev.stamp + ' (가상)', color:'#c73b2b', t:0}; burst(f.x, f.y, FACTIONS[f.id].color, 36, true); });
+  lose.forEach(f => { f.power = Math.max(5, f.power*.45); f.flash = 1; f.stamp = {text: ev.stamp, color:'#c73b2b', t:0}; burst(f.x, f.y, FACTIONS[f.id].color, 36, true); });
 }
 function choose(side){
   if(!S || S.mode !== 'event' || performance.now() < S.armedAt) return;
@@ -2140,14 +2170,14 @@ function showResult(){
   const st = STAGES.find(s => s.n === ev.stage);
   $('#rTags').innerHTML = '<span>' + Math.floor(ev.y) + '년 ' + esc(ev.title) + '</span><span style="background:' + (st ? st.c : '#d8b46a') + ';color:#1b1510;border-color:transparent">구조도: ' + esc(ev.stage) + '</span>';
   $('#rTitle').textContent = r.match ? '실제 역사와 같습니다!' : '실제 역사와 다릅니다! 목숨 −1';
-  let mine = '<b>나의 판결</b>: ' + esc(sideName(ev, r.choice)) + (r.choice === 'B' ? '을 골랐습니다.' : ' 편을 들었습니다.');
+  let mine = '<b>나의 선택</b>: ' + esc(sideName(ev, r.choice)) + (r.choice === 'B' ? '을 골랐습니다.' : ' 편을 들었습니다.');
   $('#rMine').innerHTML = mine;
   $('#rReal').innerHTML = '<b>실제 역사</b>: ' + fmt(ev.real);
   const fix = $('#rFix');
   if(!r.match){
     fix.classList.remove('hidden');
     const gw = scaleWord(S.ghost), rw = scaleWord(ev.sc);
-    fix.innerHTML = '⚖️ <b>점선 저울</b>은 내 판결대로라면 움직였을 저울(' + esc(gw) + ')입니다. <b>금빛 저울</b>은 실제 역사(' + esc(rw) + ')로 되돌아갑니다.';
+    fix.innerHTML = '⚖️ <b>점선 저울</b>은 내 선택대로라면 움직였을 저울(' + esc(gw) + ')입니다. <b>금빛 저울</b>은 실제 역사(' + esc(rw) + ')로 되돌아갑니다.';
     clearTimeout(fixT); fixT = setTimeout(() => { if(S && S.mode === 'result') setScale(ev.sc); }, 1300);
   } else fix.classList.add('hidden');
   $('#result').classList.remove('hidden');
@@ -2164,6 +2194,7 @@ function continueGame(){
     banner('역사가 바로잡힙니다', '실제 역사: ' + sideName(ev, ev.ans) + (ev.ans === 'B' ? '' : ' 쪽의 상소가 받아들여졌습니다'));
   }
   Object.values(S.fac).forEach(f => f.dim = false);
+  if(ev.fig) setKing(S.kingIdx);
   S.ev = null; S.evSides = null; S.mode = 'play';
   if(ev.after) setTimeout(() => { if(S && S.mode === 'play') showStory(STORY[ev.after], null); }, r.match ? 600 : 2600);
 }
@@ -2184,9 +2215,9 @@ function update(dt, now){
     processTL();
   }
   let ki = 0; for(let i=0;i<KINGS.length;i++) if(KINGS[i].y <= S.year) ki = i;
-  if(ki !== S.kingIdx){ const first = S.kingIdx < 0; S.kingIdx = ki; const k = KINGS[ki]; setKing(ki);
+  if(ki !== S.kingIdx){ const first = S.kingIdx < 0; S.kingIdx = ki; const k = KINGS[ki]; if(!(S.ev && S.ev.fig)) setKing(ki);
     $('#kingName').textContent = k.n; $('#kingNo').textContent = '제' + k.no + '대 임금';
-    if(!first){ banner(k.n + ' 즉위', '제' + k.no + '대 임금, ' + Math.floor(k.y) + '년'); sKing(); } }
+    if(!first && !k.same){ banner(k.n + ' 즉위', '제' + k.no + '대 임금, ' + Math.floor(k.y) + '년'); sKing(); } }
   layout(dt);
   for(const id in S.fac){ const f = S.fac[id]; f.flash = Math.max(0, f.flash - dt*1.2); if(f.stamp){ f.stamp.t += dt; if(f.stamp.t > 3.6) f.stamp = null; } if(f.dying && f.scale < .03) delete S.fac[id]; }
   for(let i = S.particles.length - 1; i >= 0; i--){ const p = S.particles[i]; p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 70*dt; p.vx *= .985; p.life -= p.dec*dt; if(p.life <= 0) S.particles.splice(i,1); }
@@ -2294,7 +2325,7 @@ function scaleChart(){
     s += '<circle cx="' + X(p.y) + '" cy="' + Y(p.v) + '" r="5" fill="' + (r ? (ok ? '#3fae74' : '#d13a2a') : '#d8b46a') + '" stroke="#fff3cf"><title>' + p.ev.title + '</title></circle>'; });
   S.records.filter(r => !r.match).forEach(r => { const e = EVENTS[r.i]; const gv = e.gh && e.gh[r.choice] != null ? e.gh[r.choice] : r.before; const x = X(e.y) + 7;
     s += '<line x1="' + x + '" y1="' + Y(r.before) + '" x2="' + x + '" y2="' + Y(gv) + '" stroke="#ff8b6b" stroke-width="2.4" stroke-dasharray="5 4"/><circle cx="' + x + '" cy="' + Y(gv) + '" r="5" fill="none" stroke="#ff8b6b" stroke-width="2.4"/>'
-      + '<text x="' + (x + 8) + '" y="' + (Y(gv) + 4) + '" font-size="11" fill="#ff8b6b">내 판결<title>' + e.title + '</title></text>'; });
+      + '<text x="' + (x + 8) + '" y="' + (Y(gv) + 4) + '" font-size="11" fill="#ff8b6b">내 선택<title>' + e.title + '</title></text>'; });
   const big = [['인조반정',1623.2],['예송',1659.5],['환국',1680.3],['숙종 승하',1720]];
   big.forEach(b => s += '<text x="' + X(b[1]) + '" y="' + (Hc - 26) + '" text-anchor="' + (b[1] >= END ? 'end' : 'middle') + '" font-size="10.5" fill="#c8bb95">' + b[0] + '</text>');
   return s + '</svg>';
@@ -2315,19 +2346,20 @@ function showEnding(){
     '<div class="eTop"><div class="portrait" id="ePortrait">王</div><div class="kicker">1567 ~ 1720, 153년의 조정을 마쳤습니다' + (PLAYER ? ' · ' + esc(PLAYER.sid) + ' ' + esc(PLAYER.name) : '') + '</div><div class="rank goldText">' + rank[0] + '</div><p>' + rank[1] + '</p>'
     + '<p class="saveMsg" id="saveMsg">' + (PLAYER ? '결과를 저장하는 중…' : '연습 모드: 결과가 저장되지 않습니다') + '</p></div>'
     + '<div class="stats"><div class="stat"><b>' + ok + '/' + n + '</b><span>실제 역사와 일치</span></div><div class="stat"><b>' + S.lives + '</b><span>남은 목숨</span></div><div class="stat"><b>' + S.bestCombo + '</b><span>최고 연속 일치</span></div><div class="stat"><b>' + codex.length + '</b><span>만난 인물과 사건</span></div></div>'
-    + '<div class="panel navyCard"><h3>⚖️ 저울 기록: 왕권과 신권은 어떻게 움직였을까?</h3><p class="sub">금빛 선은 실제 역사의 저울, 붉은 점선은 내 판결이 실제와 달랐을 때의 가상 저울입니다. 배경 색은 학습지 구조도의 단계입니다.</p>' + scaleChart() + '</div>'
-    + '<div class="cmp"><div class="panel navyCard"><h3>판결 기록: 실제 역사와 나의 판결</h3><div class="tblwrap"><table><thead><tr><th>사건</th><th>실제 역사</th><th>나의 판결</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + hints.map(h => '<div class="hint">' + esc(h) + '</div>').join('') + '</div>'
+    + '<div class="panel navyCard"><h3>⚖️ 저울 기록: 왕권과 신권은 어떻게 움직였을까?</h3><p class="sub">금빛 선은 실제 역사의 저울, 붉은 점선은 내 선택이 실제와 달랐을 때의 가상 저울입니다. 배경 색은 학습지 구조도의 단계입니다.</p>' + scaleChart() + '</div>'
+    + '<div class="cmp"><div class="panel navyCard"><h3>판결 기록: 실제 역사와 나의 선택</h3><div class="tblwrap"><table><thead><tr><th>사건</th><th>실제 역사</th><th>나의 선택</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + hints.map(h => '<div class="hint">' + esc(h) + '</div>').join('') + '</div>'
     + '<div class="panel navyCard"><h3>붕당 계보</h3><p class="sub">사림 → 동인·서인 → 남인·북인 → 노론·소론</p>' + treeSVG('real') + '</div></div>'
     + '<div class="panel navyCard"><h3>인물·사건 도감</h3><div class="codex">' + cx + '</div></div>'
     + '<div class="row"><button class="big primary" id="again">다시 도전하기</button><button class="big" id="toTitle">처음 화면으로</button></div>';
-  const pi = document.createElement('img'); pi.className = 'hidden'; pi.alt = ''; pi.onload = () => { $('#ePortrait').textContent = ''; $('#ePortrait').appendChild(pi); }; loadImg(pi, 'ending');
+  const pi = document.createElement('img'); pi.className = 'hidden'; pi.alt = ''; pi.addEventListener('load', () => { $('#ePortrait').textContent = ''; $('#ePortrait').appendChild(pi); }); loadImg(pi, 'ending');
   $('#ending').classList.remove('hidden'); $('#ending').scrollTop = 0;
   $('#again').onclick = () => resetGame(); $('#toTitle').onclick = () => { $('#ending').classList.add('hidden'); $('#title').classList.remove('hidden'); S = null; };
   if(PLAYER && !S.saved){ S.saved = true; saveResult(ok); }
 }
 
 /* ============ 시작·조작 ============ */
-function setSpeed(s){ speedPref = s; if(S) S.speed = s; document.querySelectorAll('.spd').forEach(b => b.classList.toggle('on', +b.dataset.s === s)); }
+function setSpeed(s){ if(PLAYER) return; speedPref = s; if(S) S.speed = s; document.querySelectorAll('.spd').forEach(b => b.classList.toggle('on', +b.dataset.s === s)); }
+function applyRoomSpeed(s){ s = [1,2,4].includes(+s) ? +s : 1; if(!PLAYER) return; PLAYER.speed = s; if(S) S.speed = s; const l = $('#spdLock'); if(l) l.textContent = '속도 ' + s + '배'; }
 function togglePause(){ if(!S || S.mode !== 'play') return; S.paused = !S.paused; $('#pauseOv').classList.toggle('hidden', !S.paused); $('#pauseBtn').textContent = S.paused ? '계속하기' : '일시정지'; }
 function goFullscreen(){ const d = document.documentElement; if(document.fullscreenElement || document.webkitFullscreenElement) return; try{ const r = (d.requestFullscreen || d.webkitRequestFullscreen).call(d, {navigationUI:'hide'}); if(r && r.catch) r.catch(() => {}); }catch(e){} }
 function toggleFullscreen(){ if(document.fullscreenElement || document.webkitFullscreenElement){ try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} } else goFullscreen(); }
@@ -2338,7 +2370,9 @@ function resetGame(){
   ['#hud','#tl','#scaleBox','#king'].forEach(q => $(q).classList.remove('hidden')); $('#mini').classList.toggle('hidden', !miniOn);
   $('#whoMe').textContent = PLAYER ? PLAYER.sid + ' ' + PLAYER.name : '연습 모드';
   $('#pauseBtn').textContent = '일시정지'; S.beamA = 0; S.ghostA = 0; updateScaleText();
-  buildMarks(); refreshMini(); setSpeed(speedPref);
+  buildMarks(); refreshMini();
+  $('#hudSpd').classList.toggle('hidden', !!PLAYER); $('#spdLock').classList.toggle('hidden', !PLAYER);
+  if(PLAYER) applyRoomSpeed(PLAYER.speed || 1); else setSpeed(speedPref);
 }
 function beginPlay(){ goFullscreen(); if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ AC = null; } } if(AC && AC.state === 'suspended') AC.resume(); resetGame(); }
 
@@ -2357,14 +2391,15 @@ addEventListener('keydown', e => {
   if(S.mode === 'story'){ if(e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight'){ e.preventDefault(); nextStory(); } }
   else if(S.mode === 'event'){ if(e.key === 'ArrowLeft') choose('L'); else if(e.key === 'ArrowRight') choose('R'); else if(e.key === 'ArrowUp'){ e.preventDefault(); choose('B'); } }
   else if(S.mode === 'result'){ if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); continueGame(); } }
-  else if(S.mode === 'play'){ if(e.key === ' ' || e.key === 'p' || e.key === 'P'){ e.preventDefault(); togglePause(); } else if(e.key === '1' || e.key === '2' || e.key === '4') setSpeed(+e.key); }
+  else if(S.mode === 'play'){ if(e.key === ' ' || e.key === 'p' || e.key === 'P'){ e.preventDefault(); togglePause(); } else if(!PLAYER && (e.key === '1' || e.key === '2' || e.key === '4')) setSpeed(+e.key); }
 });
 
 /* 배경·첫 화면 그림 */
-(function(){ const im = new Image(); im.onload = () => { const b = $('#bgHall'); b.style.backgroundImage = 'url(' + im.src + ')'; b.classList.add('img'); };
-  const exts = IMG_EXTS; let i = 0; im.onerror = () => { i++; if(i < exts.length) im.src = IMG_DIR + 'hall.' + exts[i]; }; im.src = IMG_DIR + 'hall.' + exts[0];
+(function(){ const im = new Image(); im.className = 'hidden'; loadImg(im, 'hall');
+  im.addEventListener('load', () => { const b = $('#bgHall'); b.style.backgroundImage = 'url("' + im.src + '")'; b.classList.add('img'); });
   loadImg($('#titleImg'), 'title', () => {}); })();
 $('#ver').textContent = VERSION;
+preloadFigures(); setTimeout(() => { Object.values(STORY).flat().concat(EVENTS.flatMap(e => e.pre || [])).forEach(c => { if(c.img) findImg(c.img); }); findImg('ending'); }, 1500);
 requestAnimationFrame(loop);
 const CRC = (() => { const t = []; for(let n=0;n<256;n++){ let c = n; for(let k=0;k<8;k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 const crc32 = b => { let c = 0xFFFFFFFF; for(let i=0;i<b.length;i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
@@ -2426,7 +2461,9 @@ function makeMock(){
     async getPlayer(c, id){ const r = load().rooms[c]; return r && r.players ? r.players[id] || null : null; },
     async setPlayer(c, id, data){ fbCheck(data, 'player'); const db = load(); if(!db.rooms[c]) throw new Error('방 없음'); db.rooms[c].players = db.rooms[c].players || {}; db.rooms[c].players[id] = data; save(db); },
     async updatePlayer(c, id, patch){ fbCheck(patch, 'player'); const db = load(); if(!db.rooms[c]) throw new Error('방 없음'); const p = db.rooms[c].players[id] || {}; db.rooms[c].players[id] = {...p, ...patch}; save(db); },
-    watchPlayers(c, cb){ const f = () => { const r = load().rooms[c]; cb(r ? r.players || {} : {}); }; subs.push(f); f(); return () => subs.splice(subs.indexOf(f), 1); }
+    watchPlayers(c, cb){ const f = () => { const r = load().rooms[c]; cb(r ? r.players || {} : {}); }; subs.push(f); f(); return () => subs.splice(subs.indexOf(f), 1); },
+    async updateRoom(c, patch){ fbCheck(patch, 'doc'); const db = load(); if(!db.rooms[c]) throw new Error('방 없음'); db.rooms[c].doc = {...db.rooms[c].doc, ...patch}; save(db); },
+    watchRoom(c, cb){ const f = () => { const r = load().rooms[c]; cb(r ? r.doc : null); }; subs.push(f); f(); return () => subs.splice(subs.indexOf(f), 1); }
   };
 }
 async function makeFirebase(cfg){
@@ -2444,7 +2481,9 @@ async function makeFirebase(cfg){
     async getPlayer(c, id){ const s = await D.get(D.ref(db, `${base(c)}/players/${id}`)); return s.exists() ? s.val() : null; },
     async setPlayer(c, id, data){ fbCheck(data, 'player'); await D.set(D.ref(db, `${base(c)}/players/${id}`), data); },
     async updatePlayer(c, id, patch){ fbCheck(patch, 'player'); await D.update(D.ref(db, `${base(c)}/players/${id}`), patch); },
-    watchPlayers(c, cb){ return D.onValue(D.ref(db, base(c) + '/players'), s => cb(s.val() || {})); }
+    watchPlayers(c, cb){ return D.onValue(D.ref(db, base(c) + '/players'), s => cb(s.val() || {})); },
+    async updateRoom(c, patch){ fbCheck(patch, 'doc'); await D.update(D.ref(db, base(c) + '/doc'), patch); },
+    watchRoom(c, cb){ return D.onValue(D.ref(db, base(c) + '/doc'), s => cb(s.val())); }
   };
 }
 let DB = null, UID = null, dbPromise = null;
@@ -2469,7 +2508,7 @@ if(qsRoom) $('#inRoom').value = qsRoom.toUpperCase();
 $('#inRoom').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
 $('#inSid').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5); });
 function formMsg(t){ $('#formMsg').textContent = t || ''; }
-let starting = false;
+let starting = false, unwatchS = null;
 $('#startBtn').onclick = async () => {
   if(starting) return;
   const room = $('#inRoom').value.trim().toUpperCase(), sid = $('#inSid').value.trim(), name = $('#inName').value.trim();
@@ -2484,12 +2523,13 @@ $('#startBtn').onclick = async () => {
     const old = await DB.getPlayer(room, UID) || {};
     const t = Date.now();
     await DB.setPlayer(room, UID, {...old, sid, name, status:'playing', plays: old.plays || 0, best: old.best || 0, joinedAt: old.joinedAt || t, seenAt: t});
-    PLAYER = {room, sid, name}; ls.set('bd_me', PLAYER);
+    PLAYER = {room, sid, name}; ls.set('bd_me', {room, sid, name}); PLAYER.speed = doc.speed || 1;
     beginPlay();
+    if(unwatchS) unwatchS(); unwatchS = DB.watchRoom(room, d => { if(d && PLAYER && PLAYER.room === room) applyRoomSpeed(d.speed || 1); });
   }catch(e){ console.error(e); formMsg('입장하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.'); }
   finally{ starting = false; $('#startBtn').textContent = '즉위하기'; }
 };
-$('#practiceBtn').onclick = () => { PLAYER = null; formMsg(''); beginPlay(); };
+$('#practiceBtn').onclick = () => { if(unwatchS){ unwatchS(); unwatchS = null; } PLAYER = null; formMsg(''); beginPlay(); };
 
 async function saveResult(ok){
   const msg = $('#saveMsg');
@@ -2505,14 +2545,14 @@ async function saveResult(ok){
 }
 
 /* ============ 교사 화면 ============ */
-let TROOM = null, unwatchT = null, TPLAYERS = {};
+let TROOM = null, unwatchT = null, unwatchTR = null, TPLAYERS = {};
 const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function myRooms(){ return ls.get('bd_rooms', []); }
 $('#teacherBtn').onclick = async () => { $('#title').classList.add('hidden'); $('#teacher').classList.remove('hidden'); tcHome(); };
 function tcShell(inner){ $('#tcInner').innerHTML = '<div class="tcHead"><h2 class="goldText">선생님 화면 · 기울어진 저울</h2><button class="big" id="tcBack">← 첫 화면</button></div>' + inner;
   $('#tcBack').onclick = () => { if(unwatchT){ unwatchT(); unwatchT = null; } $('#teacher').classList.add('hidden'); $('#title').classList.remove('hidden'); }; }
 async function tcHome(){
-  tcShell('<div class="panel navyCard" style="margin-top:16px"><p class="sub" id="tcConn">서버에 연결하는 중…</p><div class="row" style="justify-content:flex-start"><input id="memoIn" maxlength="20" placeholder="방 이름(선택) 예: 3학년 2반" style="padding:12px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--cream);font-size:15px;font-family:inherit;min-width:220px"><button class="big primary" id="newRoom">새 방 만들기</button></div>'
+  tcShell('<div class="panel navyCard" style="margin-top:16px"><p class="sub" id="tcConn">서버에 연결하는 중…</p><div class="row" style="justify-content:flex-start"><input id="memoIn" maxlength="20" placeholder="방 이름(선택) 예: 3학년 2반" style="padding:12px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--cream);font-size:15px;font-family:inherit;min-width:220px"><label class="mini" style="display:flex;align-items:center;gap:6px;color:var(--cream)">학생 게임 속도 <select id="spdIn" style="padding:10px 12px;border-radius:999px;border:1px solid var(--line);background:#252b49;color:var(--cream);font-size:15px;font-family:inherit"><option value="1">1배</option><option value="2">2배</option><option value="4">4배</option></select></label><button class="big primary" id="newRoom">새 방 만들기</button></div>'
     + '<h3 style="margin-top:16px">이 기기에서 만든 방</h3><div class="roomList" id="roomList"></div></div>');
   const rl = myRooms(); $('#roomList').innerHTML = rl.length ? rl.slice().reverse().map(r => '<button data-c="' + esc(r.code) + '">' + esc(r.code) + '<small>' + esc(nowStr(r.at)) + (r.memo ? ' · ' + esc(r.memo) : '') + '</small></button>').join('') : '<p class="sub">아직 만든 방이 없습니다.</p>';
   document.querySelectorAll('#roomList button').forEach(b => b.onclick = () => tcRoom(b.dataset.c));
@@ -2523,7 +2563,8 @@ async function tcNewRoom(){
   await getDB();
   const memo = (($('#memoIn') && $('#memoIn').value) || '').trim().slice(0, 20);
   let code = ''; for(let k=0;k<6;k++){ code = 'BD' + Array.from({length:4}, () => CODE_CH[Math.floor(Math.random()*CODE_CH.length)]).join(''); if(!(await DB.getRoom(code))) break; }
-  try{ await DB.createRoom(code, {hostUid:UID, kind:KIND, title:'기울어진 저울(주제 8)', memo, createdAt:Date.now()}); }
+  const speed = +(($('#spdIn') && $('#spdIn').value) || 1) || 1;
+  try{ await DB.createRoom(code, {hostUid:UID, kind:KIND, title:'기울어진 저울(주제 8)', memo, speed, createdAt:Date.now()}); }
   catch(e){ console.error(e); toast('방을 만들지 못했어요. 인터넷 연결을 확인해 주세요.'); return; }
   const rl = myRooms(); rl.push({code, at:Date.now(), memo}); ls.set('bd_rooms', rl.slice(-30));
   tcRoom(code);
@@ -2532,13 +2573,16 @@ async function tcRoom(code){
   await getDB(); TROOM = code;
   const link = location.origin + location.pathname + '?room=' + code;
   tcShell('<div class="tcGrid"><div class="panel navyCard"><p class="kicker">방 코드</p><div class="codeBig goldText">' + esc(code) + '</div><div class="qr" id="qr"></div><p class="linkTxt">' + esc(link) + '</p>'
-    + '<div class="tcBtns" style="margin-top:10px"><button class="chip" id="copyLink">링크 복사</button><button class="chip" id="otherRoom">다른 방</button></div></div>'
+    + '<div class="tcBtns" style="margin-top:10px"><button class="chip" id="copyLink">링크 복사</button><button class="chip" id="otherRoom">다른 방</button></div>'
+    + '<div style="margin-top:14px"><p class="kicker" style="margin:0 0 6px">학생 게임 속도</p><div class="tcBtns" id="tSpd">' + [1,2,4].map(v => '<button class="chip" data-v="' + v + '">' + v + '배</button>').join('') + '</div><p class="mini" style="color:#aeb2c8;margin:6px 0 0;font-size:12px">바꾸면 게임 중인 학생 화면에도 바로 적용돼요.</p></div></div>'
     + '<div class="panel navyCard"><div class="tcHead"><h3 style="margin:0">참여 학생 <span id="pCount"></span></h3><button class="btn" id="xlsxBtn">엑셀 내려받기</button></div>'
     + '<div class="tblwrap" style="margin-top:10px"><table><thead><tr><th>학번</th><th>이름</th><th>상태</th><th>도전</th><th>최고</th><th>최근</th><th>최근 목숨</th><th>최근 완료</th></tr></thead><tbody id="pBody"></tbody></table></div></div></div>');
   try{ drawQR($('#qr'), link, 240); }catch(e){}
   $('#copyLink').onclick = () => { try{ navigator.clipboard.writeText(link); toast('링크를 복사했어요.'); }catch(e){ toast(link); } };
   $('#otherRoom').onclick = () => { if(unwatchT){ unwatchT(); unwatchT = null; } tcHome(); };
   $('#xlsxBtn').onclick = downloadXlsx;
+  document.querySelectorAll('#tSpd button').forEach(b => b.onclick = async () => { try{ await DB.updateRoom(code, {speed:+b.dataset.v}); toast('학생 게임 속도를 ' + b.dataset.v + '배로 바꿨어요'); }catch(e){ console.error(e); toast('속도를 바꾸지 못했어요'); } });
+  if(unwatchTR) unwatchTR(); unwatchTR = DB.watchRoom(code, d => { const s = (d && d.speed) || 1; document.querySelectorAll('#tSpd button').forEach(b => b.classList.toggle('on', +b.dataset.v === s)); });
   const doc = await DB.getRoom(code); if(!doc){ toast('이 방을 찾을 수 없어요.'); }
   if(unwatchT) unwatchT();
   unwatchT = DB.watchPlayers(code, ps => { TPLAYERS = ps || {}; renderPlayers(); });
