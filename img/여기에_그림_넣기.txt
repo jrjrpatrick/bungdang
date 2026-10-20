@@ -1,0 +1,22 @@
+이 img 폴더에 AI로 만든 그림을 아래 이름 그대로 넣으세요. (확장자는 jpg, png, webp 중 아무거나)
+그림이 없는 파일은 게임이 알아서 건너뜁니다(왕은 간단한 그림, 배경은 색으로 대신 보임).
+
+hall            게임 배경(편전)            가로 16:9
+title           첫 화면 오른쪽 그림         세로 9:16
+king_seonjo     선조   (배경 지운 PNG)      세로 2:3
+king_gwanghae   광해군 (배경 지운 PNG)
+king_injo       인조   (배경 지운 PNG)
+king_hyojong    효종   (배경 지운 PNG)
+king_hyeonjong  현종   (배경 지운 PNG)
+king_sukjong    숙종   (배경 지운 PNG)
+st_scale        시작: 왕권과 신권의 조화      가로 3:2
+st_sarim        시작: 사림의 시대
+st_bungdang     개념: 붕당 정치란?
+st_yuak         경신환국: 비 오는 날의 잔치
+st_anger        경신환국: 숙종의 분노
+st_queen        기사환국: 왕비에게 아들이 없다
+st_prince       기사환국: 왕자 탄생
+st_regret       갑술환국: 숙종의 후회
+st_restore      갑술환국: 다시 왕비로!
+st_hwanguk      정리: 환국의 공통점
+ending          엔딩 초상                  정사각형 1:1
